@@ -1,7 +1,11 @@
 #ifndef _CL_HELPER_H
 #define _CL_HELPER_H
 
-#include <OpenCL/OpenCL.h>
+#ifdef __APPLE__
+    #include <OpenCL/cl.hpp>
+#else
+    #include <CL/cl.h>
+#endif
 
 char* load_program_source(const char *filename);
 cl_kernel load_kernel_from_file(cl_context context, const char *filename);

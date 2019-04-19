@@ -43,27 +43,34 @@ cl_kernel load_kernel_from_file(cl_context context, const char *filename) {
 }
 
 cl_context create_context(cl_uint* num_devices) {
-  cl_int err;
-  cl_device_id *devices, cpus[16];
-  devices = malloc(16 * sizeof(cl_device_id));
-  cl_uint num_cpus;
-  cl_context context;
+  cl_uint platformIdCount = 0;
+  clGetPlatformIDs(0, NULL, &platformIdCount);
 
-  // First get the CPU device, as a fallback
-	err = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_CPU, 16, cpus, &num_cpus);
-	check_succeeded("Getting device IDs", err);
+  cl_platform_id platformIds[platformIdCount];
+  clGetPlatformIDs(platformIdCount, platformIds, NULL);
 
-  // Find the GPU CL device, this is what we really want
-	// If there is no GPU device is CL capable, fall back to CPU
-	err = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 16, devices, num_devices);
-	if (err != CL_SUCCESS || *num_devices == 0) {
-    devices = cpus;
-    *num_devices = num_cpus;
-  }
-	assert(*devices);
+  // http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clGetDeviceIDs.html
+  clGetDeviceIDs(platformIds[0], CL_DEVICE_TYPE_ALL, 0, NULL, num_devices);
+  cl_uint deviceIdCount = *num_devices;
 
-  context = clCreateContext(0, *num_devices, devices, NULL, NULL, &err);
-  check_succeeded("Creating context", err);
+  if (deviceIdCount == 0)
+      return 0;
+
+  cl_device_id deviceIds[deviceIdCount];
+  clGetDeviceIDs(platformIds[0], CL_DEVICE_TYPE_ALL, deviceIdCount, deviceIds, NULL);
+
+  // http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clCreateContext.html
+  const cl_context_properties contextProperties[] =
+  {
+      CL_CONTEXT_PLATFORM,
+      platformIds[0],
+      0,
+      0
+  };
+
+  cl_int error = CL_SUCCESS;
+  cl_context context = clCreateContext(contextProperties, deviceIdCount, deviceIds, NULL, NULL, &error);
+//  CheckError(error);
 
   return context;
 }

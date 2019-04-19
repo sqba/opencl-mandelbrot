@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <OpenCL/OpenCL.h>
-
 #include "bmp.h"
 #include "cl_helper.h"
 
