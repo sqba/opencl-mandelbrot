@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "bmp.h"
 #include "cl_helper.h"
@@ -96,6 +97,15 @@ int runCL(int width, int height)
 }
 
 int main(int argc, const char * argv[]) {
+  clock_t start, end;
+  double cpu_time_used;
+  
+  start = clock();
   runCL(1024, 1024);
+  end = clock();
+  cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+  printf("runCL(...) took %f seconds to execute \n", cpu_time_used);
+
   return 0;
 }
