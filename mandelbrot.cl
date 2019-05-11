@@ -16,7 +16,7 @@ float mapY(float y) {
   return y*2.5 - 1.25;
 }
 
-__kernel void render(__global char *out) {
+__kernel void render(__global char *out, int my_int) {
   int x_dim = get_global_id(0);
   int y_dim = get_global_id(1);
   size_t width = get_global_size(0);

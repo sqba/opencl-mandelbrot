@@ -7,7 +7,7 @@
 #include "bmp.h"
 #include "cl_helper.h"
 
-int runCL(int width, int height)
+int runCL(int width, int height, int platform_index)
 {
 	cl_kernel  kernel;
 
@@ -27,7 +27,7 @@ int runCL(int width, int height)
 
   char *host_image = (char *) malloc(buffer_size);
 
-	context = create_context(&num_devices);
+	context = create_context(&num_devices, platform_index);
   if(num_devices == 0) {
     printf("No compute devices found\n");
     return -1;
@@ -56,6 +56,10 @@ int runCL(int width, int height)
   // Now setup the arguments to our kernel
   // In our case, we just need to give it a pointer to the image
   err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &image);
+  check_succeeded("Setting kernel arg", err);
+
+  int my_int = 5;
+  err  = clSetKernelArg(kernel, 1, sizeof(my_int), &my_int);
   check_succeeded("Setting kernel arg", err);
 
   // Run the calculation by enqueuing it and forcing the
@@ -100,12 +104,16 @@ int main(int argc, const char * argv[]) {
   clock_t start, end;
   double cpu_time_used;
   
+  int platform_index = 0;
+  if(argc > 1)
+    platform_index = atoi(argv[1]);
+
   start = clock();
-  runCL(1024, 1024);
+  runCL(1024, 1024, platform_index);
   end = clock();
   cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-  printf("runCL(...) took %f seconds to execute \n", cpu_time_used);
+  printf("Execution time: %f seconds \n", cpu_time_used);
 
   return 0;
 }

@@ -20,6 +20,8 @@ char* load_program_source(const char *filename) {
 	fread(source, statbuf.st_size, 1, fh);
 	source[statbuf.st_size] = '\0';
 
+  fclose(fh);
+
 	return source;
 }
 
@@ -42,28 +44,36 @@ cl_kernel load_kernel_from_file(cl_context context, const char *filename) {
   return kernel[0];
 }
 
-cl_context create_context(cl_uint* num_devices) {
+cl_context create_context(cl_uint* num_devices, int platform_index) {
   cl_uint platformIdCount = 0;
   clGetPlatformIDs(0, NULL, &platformIdCount);
+
+  if(platform_index >= platformIdCount)
+    return 0;
 
   cl_platform_id platformIds[platformIdCount];
   clGetPlatformIDs(platformIdCount, platformIds, NULL);
 
+  cl_platform_id platform = platformIds[platform_index];
+
   // http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clGetDeviceIDs.html
-  clGetDeviceIDs(platformIds[0], CL_DEVICE_TYPE_ALL, 0, NULL, num_devices);
+  clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 0, NULL, num_devices);
   cl_uint deviceIdCount = *num_devices;
 
   if (deviceIdCount == 0)
       return 0;
 
   cl_device_id deviceIds[deviceIdCount];
-  clGetDeviceIDs(platformIds[0], CL_DEVICE_TYPE_ALL, deviceIdCount, deviceIds, NULL);
+  clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, deviceIdCount, deviceIds, NULL);
+
+  cl_device_type device_type;
+  clGetDeviceInfo(deviceIds[0], CL_DEVICE_TYPE, sizeof(device_type), &device_type, NULL);
 
   // http://www.khronos.org/registry/cl/sdk/1.1/docs/man/xhtml/clCreateContext.html
   const cl_context_properties contextProperties[] =
   {
       CL_CONTEXT_PLATFORM,
-      platformIds[0],
+      platform,
       0,
       0
   };
